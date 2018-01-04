@@ -6,7 +6,6 @@
 .idea/libraries/
 .idea/.name
 *.iml
-
 /build/
 /jps-plugin/build/
 .gradle
