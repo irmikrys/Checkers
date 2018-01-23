@@ -12,18 +12,20 @@
 %% uruchamianie shella erlanga: erl +pc unicode
 %% przykładowe wypisanie znaku: board:show({white, disc}).
 
-show(?WHITE_DISC) ->
+showDisc(?WHITE_DISC) ->
   [9786];
-show(?BLACK_DISC) ->
+showDisc(?BLACK_DISC) ->
   [9787];
-show(?WHITE_KING) ->
+showDisc(?WHITE_KING) ->
   [9812];
-show(?BLACK_KING) ->
-  [9818].
+showDisc(?BLACK_KING) ->
+  [9818];
+showDisc(nothing) ->
+  "-".
 
 
-up_down_label() ->
-  "  A B C D E F G H".
+upDownLabel() ->
+  "   A  B  C  D  E  F  G  H".
 
 %%--------------------------------------------------------------------
 
