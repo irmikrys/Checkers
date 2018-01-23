@@ -6,6 +6,27 @@
 -export([start/0]).
 -compile(export_all).
 
+-include("constants.hrl").
+
+%%------------------------- showing board ----------------------------
+%% uruchamianie shella erlanga: erl +pc unicode
+%% przykładowe wypisanie znaku: board:show({white, disc}).
+
+show(?WHITE_DISC) ->
+  [9786];
+show(?BLACK_DISC) ->
+  [9787];
+show(?WHITE_KING) ->
+  [9812];
+show(?BLACK_KING) ->
+  [9818].
+
+
+up_down_label() ->
+  "  A B C D E F G H".
+
+%%--------------------------------------------------------------------
+
 -record(piece,{type :: piece(),color :: colour(),history :: [move()]}).
 -record(player,{color :: colour(),history :: [move()]}).
 -record(game,{board :: dict:dict(field(),piece()),pieceCount :: {8,8}, players :: {player(),player()},history :: [move()]}).
@@ -27,7 +48,7 @@ start() ->
   newGame().
 
 newGame() ->
-  Game = #game{board = iniciateBoard(),players = [white_player,black_player],history = []},
+  Game = #game{board = initiateBoard(),players = [white_player,black_player],history = []},
   StartingPlayer = lists:nth(1,Game#game.players),
   {FinishedGame,Winner} = gameLoop(Game,StartingPlayer,null),
   io:fwrite("The winner is: ~s!~n",[Winner]).
@@ -52,7 +73,7 @@ gameLoop(Game,Player,Winner) ->
 
 
 
-iniciateBoard() ->
+initiateBoard() ->
   Init_Pieces = [{b1,white_men},{d1,white_men},{f1,white_men},{h1,white_men},{a2,white_men},{c2,white_men},{e2,white_men},{g2,white_men},{b7,black_men},{d7,black_men},{f7,black_men},{h7,black_men},{a8,black_men},{c8,black_men},{e8,black_men},{g8,black_men}],
   Board = dict:from_list(Init_Pieces),
   Board.
