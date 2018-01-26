@@ -3,25 +3,11 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1, emptyBoard/0, addToBoard/3]).
+-export([showBoard/1, addToBoard/3]).
 
 -include("constants.hrl").
 
 %%----------------------------- board --------------------------------
-
-%% Board to mapa, Key to {row, col}, Value to pionek
-
-emptyBoard() ->
-  maps:new().
-
-getKeys(Board) ->
-  maps:keys(Board).
-
-
-%%maps:get(Key, Map, Default) - jakie value ma zwrocic jak nie znajdzie klucza
-
-
-%%--------------------------------------------------------------------
 
 addToBoard(Pos, Draught, Board) ->
   IsOccupied = isPosOccupied(Board, Pos),
