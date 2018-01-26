@@ -3,12 +3,9 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1, emptyBoard/0, addToBoard/3, getPosFigure/2]).
+-export([showBoard/1, emptyBoard/0, addToBoard/3]).
 
 -include("constants.hrl").
-
-%% uruchamianie shella erlanga: erl +pc unicode
-%% przykładowe wypisanie znaku: board:show({white, disc}).
 
 %%----------------------------- board --------------------------------
 
