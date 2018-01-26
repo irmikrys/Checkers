@@ -3,7 +3,7 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1, addToBoard/3]).
+-export([showBoard/1, addToBoard/3, makeMove/4]).
 
 -include("constants.hrl").
 
@@ -19,6 +19,19 @@ addToBoard(Pos, Draught, Board) ->
 
 isPosOccupied(Board, Position) ->
   maps:is_key(Position, Board).
+
+
+%-- returns board, position From is deleted
+%-- and its draught with To position added
+%-- todo: kill enemy if necessary
+makeMove(Board, From, To, Draught) ->
+  IsToOccupied = isPosOccupied(Board, To),
+  if
+    IsToOccupied == false ->
+      BoardWithDeleted = maps:remove(From, Board),
+      BoardWithAdded = maps:put(To, Draught, BoardWithDeleted);
+    true -> throw(cannot_make_move_occupied)
+  end.
 
 %%------------------------- showing board ----------------------------
 
