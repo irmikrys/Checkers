@@ -15,5 +15,5 @@
 -define(WHITE_FIELD, {white, field}).
 -define(BLACK_FIELD, {black, field}).
 
--define(NUMS, lists:seq(1, 8)).
+-define(NUMS, lists:reverse(lists:seq(1, 8))).
 -define(CHARS, ["A", "B", "C", "D", "E", "F", "G", "H"]).
