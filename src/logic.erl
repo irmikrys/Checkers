@@ -27,13 +27,20 @@ deleteFromBoard(Board, Pos) ->
 makeMove(Board, From, To) ->
   IsToOccupied = checkIfOccupied(Board, To),
   IsBlack = checkIfMoveFieldBlack(To),
+  IsJumpOver = checkIfJump(From, To),
   if
     (IsToOccupied == false) and (IsBlack == true) ->
       {Figure, Color} = getDraught(Board, From),
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
-      BoardEnemyKilled = killEnemyIfNecessary(BoardWithAdded, From, To, Color);
+      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver);
     true -> throw(cannot_make_move_occupied)
+  end.
+
+jumpIfOver(Board, From, To, Color, IsOver) ->
+  if
+    IsOver == true -> killEnemyIfNecessary(Board, From, To, Color);
+    true -> Board
   end.
 
 %-- returns same board if no enemy between positions
@@ -63,6 +70,9 @@ checkIfEnemy(Board, EnemyPosition, CurrentColor) ->
 checkIfMoveFieldBlack(Position) ->
   Field = getFieldColor(Position),
   Field == black.
+
+checkIfJump({Xfrom, Yfrom}, {Xto, Yto}) ->
+  ((Xfrom + Xto) rem 2 == 0) and ((Yfrom + Yto) rem 2 == 0).
 
 checkIfTurnsToKing({X, _Y}, Color) ->
   ((X == 1) and (Color == black)) or
