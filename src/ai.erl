@@ -22,13 +22,10 @@ computerMove(Board, Color) ->
            NewBoard
   end.
 
-nextPlayer(white) -> black;
-nextPlayer(black) -> white.
-
 generateTree(Board, Color, 0)     ->
   {Board, Color, rateBoard(Board,Color), []};
 generateTree(Board, Color, Depth) ->
-  NewColor = nextPlayer(Color),
+  NewColor = board:nextPlayer(Color),
   AllPossibleMoves = maps:to_list(logic:getPossibleMoves(Board, Color)),
   Children = map(fun(PositionPossibleMoves) ->
                     {From,ToList} = PositionPossibleMoves,

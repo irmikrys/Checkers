@@ -3,7 +3,7 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1]).
+-export([showBoard/1,nextPlayer/1]).
 -import(logic, [addToBoard/3, makeMove/4, getFieldType/2]).
 
 -include("constants.hrl").
@@ -50,3 +50,6 @@ showField(FieldType) ->
             true -> "*"
           end,
   Field.
+
+nextPlayer(white) -> black;
+nextPlayer(black) -> white.

@@ -3,6 +3,7 @@
 %%% Created : 26. Dec 2017 17:59
 
 %% uruchamianie shella erlanga: erl +pc unicode
+%% cover:compile_directory().
 %% przykładowe wypisanie znaku: board:show({white, disc}).
 
 %%%-------------------------------------------------------------------
@@ -11,7 +12,16 @@
 
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
-  io:fwrite(board:showBoard(initBoard())).
+  CurrentPlayer = white,
+  play(initBoard(),CurrentPlayer).
+
+play(Board,CurrentPlayer) ->
+  NewPlayer = board:nextPlayer(CurrentPlayer),
+  io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
+  io:fwrite(board:showBoard(Board)),
+  [From,To] = input:getInput(),
+  NewBoard = logic:makeMove(Board,From,To),
+  play(NewBoard,NewPlayer).
 
 initBoard() ->
   ListWhites = [{{X, Y}, {white, disc}} ||
