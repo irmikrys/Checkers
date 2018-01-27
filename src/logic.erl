@@ -14,33 +14,20 @@
 
 %-------------------------- game logic -------------------------------
 
-getFieldType(Board, Position) ->
-  maps:get(Position, Board, {getFieldColor(Position), field}).
-
-getFieldColor({X, Y}) when (X + Y) rem 2 == 1 -> black;
-getFieldColor({X, Y}) when (X + Y) rem 2 == 0 -> white;
-getFieldColor(_) -> throw(exception_get_field_color).
-
 addToBoard(Board, Pos, Draught) ->
   maps:put(Pos, Draught, Board).
 
 deleteFromBoard(Board, Pos) ->
   maps:remove(Pos, Board).
 
-getDraught(Board, Position) ->
-  maps:get(Position, Board).
-
-checkIfOccupied(Board, Position) ->
-  maps:is_key(Position, Board).
-
-
 %-- returns board, position From is deleted
-%-- and its draught with To position added
+%-- and its draught with To position added, To must be black
 %-- kills enemy if necessary
 makeMove(Board, From, To) ->
   IsToOccupied = checkIfOccupied(Board, To),
+  IsBlack = checkMoveFieldColor(To),
   if
-    IsToOccupied == false ->
+    (IsToOccupied == false) and (IsBlack == true) ->
       {Figure, Color} = getDraught(Board, From),
       BoardWithDeleted = deleteFromBoard(Board,From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
@@ -58,8 +45,29 @@ killEnemyIfNecessary(Board, {Xfrom, Yfrom}, {Xto, Yto}, CurrentColor) ->
     true -> Board
   end.
 
+%------------------------------ checkers -----------------------------
+
+checkIfOccupied(Board, Position) ->
+  maps:is_key(Position, Board).
+
 checkIfEnemy(Board, EnemyPosition, CurrentColor) ->
   {Figure, Color} = getDraught(Board, EnemyPosition),
   IsDisc = Figure == disc,
   HasOppositeColor = Color /= CurrentColor,
   IsDisc and HasOppositeColor.
+
+checkMoveFieldColor(Position) ->
+  Field = getFieldColor(Position),
+  Field == black.
+
+%------------------------------ getters ------------------------------
+
+getFieldType(Board, Position) ->
+  maps:get(Position, Board, {getFieldColor(Position), field}).
+
+getFieldColor({X, Y}) when (X + Y) rem 2 == 1 -> black;
+getFieldColor({X, Y}) when (X + Y) rem 2 == 0 -> white;
+getFieldColor(_) -> throw(exception_get_field_color).
+
+getDraught(Board, Position) ->
+  maps:get(Position, Board).
