@@ -8,7 +8,6 @@
 
 -include("constants.hrl").
 
-
 %%------------------------- showing board ----------------------------
 
 showBoard(Board) ->
