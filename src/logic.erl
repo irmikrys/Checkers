@@ -33,7 +33,8 @@ makeMove(Board, From, To) ->
       {Figure, Color} = getDraught(Board, From),
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
-      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver);
+      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver),
+      BoardWithKing = turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
   end.
 
@@ -54,7 +55,11 @@ killEnemyIfNecessary(Board, {Xfrom, Yfrom}, {Xto, Yto}, CurrentColor) ->
   end.
 
 turnToKing(Board, Position, Color) ->
-  maps:update(Position, {Color, king}, Board).
+  TurnToKing = checkIfTurnsToKing(Position, Color),
+  if
+    TurnToKing == true -> maps:update(Position, {Color, king}, Board);
+    true -> Board
+  end.
 
 %------------------------------ checkers -----------------------------
 
