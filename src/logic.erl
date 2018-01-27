@@ -31,7 +31,9 @@ makeMove(Board, From, To) ->
       {Figure, Color} = getDraught(Board, From),
       BoardWithDeleted = deleteFromBoard(Board,From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
-      BoardEnemyKilled = killEnemyIfNecessary(BoardWithAdded, From, To, Color);
+      BoardWithAdded; % zwraca board z przesunietym pionkiem
+      %BoardEnemyKilled = killEnemyIfNecessary(BoardWithAdded, From, To, Color),
+      %BoardEnemyKilled;
     true -> throw(cannot_make_move_occupied)
   end.
 
