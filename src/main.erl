@@ -7,8 +7,7 @@
 
 %%%-------------------------------------------------------------------
 -module(main).
--export([start/0]).
--compile(export_all).
+-export([start/0, initBoard/0]).
 
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),

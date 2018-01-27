@@ -3,35 +3,11 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1, addToBoard/3, makeMove/4]).
+-export([showBoard/1]).
+-import(logic, [addToBoard/3, makeMove/4, getFieldType/2]).
 
 -include("constants.hrl").
 
-%%----------------------------- board --------------------------------
-
-addToBoard(Pos, Draught, Board) ->
-  IsOccupied = isPosOccupied(Board, Pos),
-  Add = if
-          IsOccupied == false -> maps:put(Pos, Draught, Board);
-          true -> throw(cannot_add_to_board)
-        end,
-  Add.
-
-isPosOccupied(Board, Position) ->
-  maps:is_key(Position, Board).
-
-
-%-- returns board, position From is deleted
-%-- and its draught with To position added
-%-- todo: kill enemy if necessary
-makeMove(Board, From, To, Draught) ->
-  IsToOccupied = isPosOccupied(Board, To),
-  if
-    IsToOccupied == false ->
-      BoardWithDeleted = maps:remove(From, Board),
-      BoardWithAdded = maps:put(To, Draught, BoardWithDeleted);
-    true -> throw(cannot_make_move_occupied)
-  end.
 
 %%------------------------- showing board ----------------------------
 
@@ -42,6 +18,9 @@ showBoard(Board) ->
     upDownLabel() ++
     "~n".
 
+upDownLabel() ->
+  "  A B C D E F G H~n".
+
 getAllStringRows(Board) ->
   lists:concat([packRow(Board, Row) ++ "\n" || Row <- lists:seq(1, 8)]).
 
@@ -49,6 +28,14 @@ packRow(Board, Row) ->
   leftSideLabelPack(lists:nth(Row, ?NUMS)) ++
     getStringRow(Board, Row) ++
     rightSideLabelPack(lists:nth(Row, ?NUMS)).
+
+leftSideLabelPack(Row) when Row > 0, Row < 9, is_integer(Row) ->
+  integer_to_list(Row) ++ " ";
+leftSideLabelPack(_) -> throw(exception_left_label).
+
+rightSideLabelPack(Row) when Row > 0, Row < 9, is_integer(Row) ->
+  integer_to_list(Row);
+rightSideLabelPack(_) -> throw(exception_right_label).
 
 getStringRow(Board, Row) ->
   lists:concat([showField(getFieldType(Board, {Row, Col})) ++ " " || Col <- lists:seq(1, 8)]).
@@ -64,25 +51,3 @@ showField(FieldType) ->
             true -> "*"
           end,
   Field.
-
-getFieldType(Board, Position) ->
-  maps:get(Position, Board, {getFieldColor(Position), field}).
-
-getFieldColor({X, Y}) when (X + Y) rem 2 == 1 -> black;
-getFieldColor({X, Y}) when (X + Y) rem 2 == 0 -> white;
-getFieldColor(_) -> throw(exception_get_field_color).
-
-leftSideLabelPack(Row)
-  when Row > 0, Row < 9, is_integer(Row) ->
-  integer_to_list(Row) ++ " ";
-leftSideLabelPack(_) ->
-  ".".
-
-rightSideLabelPack(Row)
-  when Row > 0, Row < 9, is_integer(Row) ->
-  integer_to_list(Row);
-rightSideLabelPack(_) ->
-  ".".
-
-upDownLabel() ->
-  "  A B C D E F G H~n".
