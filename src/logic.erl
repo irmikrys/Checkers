@@ -6,6 +6,7 @@
 %%% @end
 %%% Created : 27. sty 2018 11:41
 %%%-------------------------------------------------------------------
+
 -module(logic).
 -author("irmi").
 
@@ -25,11 +26,11 @@ deleteFromBoard(Board, Pos) ->
 %-- kills enemy if necessary
 makeMove(Board, From, To) ->
   IsToOccupied = checkIfOccupied(Board, To),
-  IsBlack = checkMoveFieldColor(To),
+  IsBlack = checkIfMoveFieldBlack(To),
   if
     (IsToOccupied == false) and (IsBlack == true) ->
       {Figure, Color} = getDraught(Board, From),
-      BoardWithDeleted = deleteFromBoard(Board,From),
+      BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
       BoardWithAdded; % zwraca board z przesunietym pionkiem
       %BoardEnemyKilled = killEnemyIfNecessary(BoardWithAdded, From, To, Color),
@@ -40,12 +41,15 @@ makeMove(Board, From, To) ->
 %-- returns same board if no enemy between positions
 %-- returns board without mid draught if enemy
 killEnemyIfNecessary(Board, {Xfrom, Yfrom}, {Xto, Yto}, CurrentColor) ->
-  EnemyPosition = {(Xfrom + Xto)/2, (Yfrom + Yto)/2},
+  EnemyPosition = {(Xfrom + Xto) / 2, (Yfrom + Yto) / 2},
   IsEnemy = checkIfEnemy(Board, EnemyPosition, CurrentColor),
   if
     IsEnemy == true -> deleteFromBoard(Board, EnemyPosition);
     true -> Board
   end.
+
+turnToKing(Board, Position, Color) ->
+  maps:update(Position, {Color, king}, Board).
 
 %------------------------------ checkers -----------------------------
 
@@ -58,9 +62,13 @@ checkIfEnemy(Board, EnemyPosition, CurrentColor) ->
   HasOppositeColor = Color /= CurrentColor,
   IsDisc and HasOppositeColor.
 
-checkMoveFieldColor(Position) ->
+checkIfMoveFieldBlack(Position) ->
   Field = getFieldColor(Position),
   Field == black.
+
+checkIfTurnsToKing({X, _Y}, Color) ->
+  ((X == 1) and (Color == black)) or
+    ((X == 8) and (Color == white)).
 
 %------------------------------ getters ------------------------------
 
