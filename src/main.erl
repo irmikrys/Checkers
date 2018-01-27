@@ -7,7 +7,7 @@
 
 %%%-------------------------------------------------------------------
 -module(main).
--export([start/0, initBoard/0]).
+-export([start/0, initBoard/0, test/0]).
 
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
@@ -20,3 +20,12 @@ initBoard() ->
     X <- lists:seq(6, 8), Y <- lists:seq(1, 8), (X + Y) rem 2 == 1],
   List = lists:append([ListWhites, ListBlacks]),
   maps:from_list(List).
+
+%% ------ test generating tree ------
+
+test() ->
+  io:fwrite("~n============= Testing =============~n~n"),
+  Board = initBoard(),
+  io:fwrite(Board).
+  %NewBoard = ai:computerMove(initBoard(),white),
+  %io:fwrite(board:showBoard(NewBoard)).
