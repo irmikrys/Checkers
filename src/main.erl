@@ -21,8 +21,14 @@ play(Board,CurrentPlayer) ->
   io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
   io:fwrite(board:showBoard(Board)),
   [From,To] = input:getInput(),
-  NewBoard = logic:makeMove(Board,From,To),
-  play(NewBoard,NewPlayer).
+  try
+    NewBoard = logic:makeMove(Board,From,To),
+    play(NewBoard,NewPlayer)
+  catch
+    _:_ ->
+      io:fwrite("You cannot make that move! Try again:~n"),
+      input:getInput()
+  end.
 
 initBoard() ->
   ListWhites = [{{X, Y}, {white, disc}} ||
