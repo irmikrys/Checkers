@@ -11,7 +11,7 @@
 
 %% API
 -import(lists, [foldr/3, map/2, nth/2]).
--export([computerMove/2]).
+-export([computerMove/2, nextPlayer/1]).
 -define(TREE_DEPTH, 1).
 
 computerMove(Board, Color) ->
@@ -25,7 +25,7 @@ computerMove(Board, Color) ->
 generateTree(Board, Color, 0)     ->
   {Board, Color, rateBoard(Board,Color), []};
 generateTree(Board, Color, Depth) ->
-  NewColor = board:nextPlayer(Color),
+  NewColor = nextPlayer(Color),
   AllPossibleMoves = maps:to_list(logic:getPossibleMoves(Board, Color)),
   Children = map(fun(PositionPossibleMoves) ->
                     {From,ToList} = PositionPossibleMoves,
@@ -74,3 +74,6 @@ rateBoard(Board,Color) ->
                    V=={Color,king} -> AccIn + 3
                 end
             end,0,Filtered).
+
+nextPlayer(white) -> black;
+nextPlayer(black) -> white.

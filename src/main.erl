@@ -9,6 +9,7 @@
 %%%-------------------------------------------------------------------
 -module(main).
 -export([start/0, initBoard/0, test/0]).
+-import(ai, [nextPlayer/1]).
 
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
@@ -16,7 +17,7 @@ start() ->
   play(initBoard(),CurrentPlayer).
 
 play(Board,CurrentPlayer) ->
-  NewPlayer = board:nextPlayer(CurrentPlayer),
+  NewPlayer = nextPlayer(CurrentPlayer),
   io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
   io:fwrite(board:showBoard(Board)),
   [From,To] = input:getInput(),

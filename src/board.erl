@@ -3,7 +3,7 @@
 %%% Created : 27. Dec 2017 12:13
 %%%-------------------------------------------------------------------
 -module(board).
--export([showBoard/1,nextPlayer/1]).
+-export([showBoard/1]).
 -import(logic, [addToBoard/3, makeMove/4, getFieldType/2]).
 
 -include("constants.hrl").
@@ -41,15 +41,12 @@ getStringRow(Board, Row) ->
 
 showField(FieldType) ->
   Field = if
-            FieldType == ?WHITE_DISC -> "w";%%[9786];
-            FieldType == ?BLACK_DISC -> "b";%%[9787];
-            FieldType == ?WHITE_KING -> "W";%%[9812];
-            FieldType == ?BLACK_KING -> "B";%%[9818];
-            FieldType == ?WHITE_FIELD -> " ";%%[9633];
-            FieldType == ?BLACK_FIELD -> "+";%%[9632];
+            FieldType == ?WHITE_DISC -> [9786];
+            FieldType == ?BLACK_DISC -> [9787];
+            FieldType == ?WHITE_KING -> [9812];
+            FieldType == ?BLACK_KING -> [9818];
+            FieldType == ?WHITE_FIELD -> [9633];
+            FieldType == ?BLACK_FIELD -> [9632];
             true -> "*"
           end,
   Field.
-
-nextPlayer(white) -> black;
-nextPlayer(black) -> white.
