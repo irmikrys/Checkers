@@ -27,7 +27,7 @@ play(Board,CurrentPlayer) ->
   catch
     _:_ ->
       io:fwrite("You cannot make that move! Try again:~n"),
-      input:getInput()
+      play(Board, CurrentPlayer)
   end.
 
 initBoard() ->
