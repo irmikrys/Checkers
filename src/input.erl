@@ -18,7 +18,7 @@
 %------------------------ parse player input--------------------------
 
 getInput() ->
-  io:fwrite("Enter positions properly formatted e.g. A 1:"),
+  io:fwrite("Enter positions properly formatted e.g. A1:~n"),
   From = getFromPosition(),
   To = getToPosition(),
   [From, To].
