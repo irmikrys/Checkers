@@ -13,7 +13,7 @@
 -include("constants.hrl").
 
 %% API
--export([addToBoard/3, makeMove/3, getFieldType/2, getPossibleMoves/3]).
+-export([addToBoard/3, makeMove/3, getFieldType/2, getPossibleMoves/3, getPossibleMoves/2]).
 
 %-------------------------- game logic -------------------------------
 
@@ -30,7 +30,7 @@ makeMove(Board, From, To) ->
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
       BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver),
-      BoardWithKing = turnToKing(BoardJumpOver, To, Color);
+      turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
   end.
 
@@ -69,6 +69,15 @@ turnToKing(Board, Position, Color) ->
 %% blacks diagonally up), kings same for now...
 
 %-- returns possible moves for figure from From position
+getPossibleMoves(Board,Color) ->
+  Filtered = maps:filter(fun(_,V) -> {ColorPiece,_} = V, ColorPiece == Color end,Board),
+  MoveMap = maps:fold(fun(From,Piece,Acc) ->
+              if Piece=={Color,disc} -> maps:put(From,getPossibleMoves(Board,From,{Color,disc}),Acc);
+                 Piece=={Color,king} ->  maps:put(From,getPossibleMoves(Board,From,{Color,king}),Acc)
+              end
+            end,maps:new(),Filtered),
+  MoveMap.
+
 getPossibleMoves(Board, From = {X, Y}, {white, disc}) ->
   [{X1, Y1} || X1 <- [X + 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
   [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2})];

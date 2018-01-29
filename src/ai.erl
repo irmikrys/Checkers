@@ -16,23 +16,31 @@
 
 computerMove(Board, Color) ->
   PossibleMoves = logic:getPossibleMoves(Board,Color),
-  if (length(PossibleMoves)==0) -> Board;
-     (length(PossibleMoves)>0) -> Tree = generateTree(Board,Color,?TREE_DEPTH),
+  PossibleMovesSize  = maps:size(PossibleMoves),
+  if (PossibleMovesSize > 0) -> Tree = generateTree(Board,Color,?TREE_DEPTH),
           {NewBoard, _, _, _} = minMax(1,Tree),
-           NewBoard
+           NewBoard;
+      true -> Board
   end.
 
 generateTree(Board, Color, 0)     ->
   {Board, Color, rateBoard(Board,Color), []};
 generateTree(Board, Color, Depth) ->
   NewColor = nextPlayer(Color),
-  AllPossibleMoves = maps:to_list(logic:getPossibleMoves(Board, Color)),
+  PossibleMoves = logic:getPossibleMoves(Board, Color),
+  AllPossibleMoves = maps:fold(fun(K,V,AccIn) ->
+                                  if V/=[] ->
+                                    AccIn ++ lists:foldl(fun(Element,Acc)->
+                                                      Acc ++ [[K,Element]]
+                                                  end,
+                                      [],V);
+                                  true -> AccIn
+                                  end
+                               end,[],PossibleMoves),
   Children = map(fun(PositionPossibleMoves) ->
-                    {From,ToList} = PositionPossibleMoves,
-                    map(fun(To) ->
-                          generateTree(logic:makeMove(Board, From, To), NewColor, Depth-1)
-                        end,
-                        ToList)
+                    From = nth(1, PositionPossibleMoves),
+                    To = nth(2, PositionPossibleMoves),
+                    generateTree(logic:makeMove(Board, From, To), NewColor, Depth-1)
                  end,
                  AllPossibleMoves),
   {Board, Color, rateBoard(Board,Color), Children}.
@@ -68,7 +76,7 @@ even(X) -> X band 1 == 0.
 odd(X) -> not even(X).
 
 rateBoard(Board,Color) ->
-  Filtered = maps:filter(fun(_,V) -> V == {Color,_} end,Board),
+  Filtered = maps:filter(fun(_,V) -> {ColorPiece,_} = V, ColorPiece == Color end,Board),
   maps:fold(fun(_,V,AccIn) ->
                 if V=={Color,disc} -> AccIn + 1;
                    V=={Color,king} -> AccIn + 3

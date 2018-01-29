@@ -37,6 +37,15 @@ initBoard() ->
 test() ->
   io:fwrite("~n============= Testing =============~n~n"),
   Board = initBoard(),
-  io:fwrite(Board).
+  %io:fwrite(Board),
+  playAI(Board,white).
   %NewBoard = ai:computerMove(initBoard(),white),
   %io:fwrite(board:showBoard(NewBoard)).
+
+playAI(Board,CurrentPlayer) ->
+  NewPlayer = nextPlayer(CurrentPlayer),
+  io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
+  io:fwrite(board:showBoard(Board)),
+  NewBoard = ai:computerMove(Board,CurrentPlayer),
+  {ok,[_]} = io:fread("Nextmove: ","~s"),
+  playAI(NewBoard,NewPlayer).
