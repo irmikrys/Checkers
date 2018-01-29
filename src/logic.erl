@@ -199,7 +199,7 @@ checkIfJumpPossible(Xdist, Ydist) ->
 %-- check if between positions there is exactly one enemy
 checkFieldsBetween(Board, From, To, Direction, EnemyColor) ->
   Fields = getFieldsBetween(Board, From, To, Direction),
-  Discs = lists:filter(fun({_, {_, Type}}) -> Type == disc end, Fields),
+  Discs = lists:filter(fun({_, {_, Type}}) -> Type /= field end, Fields),
   DiscsNum = length(Discs),
   EnemiesNum = length(lists:filter(fun({_, {Col, _}}) -> Col == EnemyColor end, Discs)),
   if
@@ -229,7 +229,7 @@ getFieldsBetween(Board, From, To, Direction) ->
 
 getEnemyPosition(Board, From, To, Direction) ->
   Fields = getFieldsBetween(Board, From, To, Direction),
-  [{EnemyPosition, _}] = lists:filter(fun({_, {_, Type}}) -> Type == disc end, Fields),
+  [{EnemyPosition, _}] = lists:filter(fun({_, {_, Type}}) -> Type /= field end, Fields),
   EnemyPosition.
 
 getPosInDirection({X, Y}, {Xdir, Ydir}) ->
