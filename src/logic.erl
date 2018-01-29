@@ -62,29 +62,35 @@ turnToKing(Board, Position, Color) ->
 
 getPossibleMoves(Board, Color) ->
   Filtered = maps:filter(fun(_, V) -> {ColorPiece, _} = V, ColorPiece == Color end, Board),
-  MoveMap = maps:fold(fun(From, Piece, Acc) ->
-    if
-      Piece == {Color, disc} ->
-        maps:put(From, getPossibleMoves(Board, From, {Color, disc}), Acc);
-      Piece == {Color, king} ->
-        maps:put(From, getPossibleMoves(Board, From, {Color, king}), Acc)
-    end
+  JumpMap = maps:fold(fun(From, Piece, Acc) ->
+    {Moves,HasJump} = getPossibleMoves(Board, From, Piece),
+                          if HasJump==true ->
+                              maps:put(From,Moves , Acc);
+                              true -> Acc
+                          end
                       end, maps:new(), Filtered),
-  MoveMap.
+  Size = maps:size(JumpMap),
+  if Size==0 -> maps:fold(fun(From, Piece, Acc) ->
+                          {Moves,_} = getPossibleMoves(Board, From, Piece),
+                          maps:put(From,Moves, Acc)
+                      end, maps:new(), Filtered);
+    true -> JumpMap
+end.
 
 %% discs can move one field forward (whites diagonally down,
 %% blacks diagonally up), kings as many fields as possible
 %% if there is a kill (jump) possible, then steps not generated
 %-- returns possible moves for FigureType from From position
+%% {Moves,HasJumps}
 getPossibleMoves(Board, From, FigureType) ->
   Jumps = getJumps(Board, From, FigureType),
 %%  erlang:display(Jumps),
   NoKills = (Jumps == []),
   if
     NoKills == false ->
-      Jumps;
+      {Jumps,true};
     NoKills == true ->
-      getSteps(Board, From, FigureType)
+      {getSteps(Board, From, FigureType),false}
   end.
 
 getJumps(Board, {X, Y}, {Color, disc}) ->
