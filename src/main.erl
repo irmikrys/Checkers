@@ -8,7 +8,7 @@
 
 %%%-------------------------------------------------------------------
 -module(main).
--export([start/0, initBoard/0, test/0]).
+-export([start/0, playWithHuman/0, playWithAI/0, playAIvsAI/0, initBoard/0, test/0]).
 -import(ai, [nextPlayer/1]).
 
 start() ->
@@ -17,6 +17,20 @@ start() ->
   playWithAI(initBoard(), CurrentPlayer).
   %AIvsAI(initBoard(), CurrentPlayer).
   %play(initBoard(), CurrentPlayer).
+
+playWithHuman() ->
+  io:fwrite("~n============= Draughts =============~n~n"),
+  CurrentPlayer = white,
+  play(initBoard(), CurrentPlayer).
+
+playWithAI() ->
+  io:fwrite("~n============= Draughts =============~n~n"),
+  CurrentPlayer = white,
+  playWithAI(initBoard(), CurrentPlayer).
+
+playAIvsAI() ->
+  CurrentPlayer = white,
+  playAIvsAI(initBoard(), CurrentPlayer).
 
 play(Board, CurrentPlayer) ->
   NewPlayer = nextPlayer(CurrentPlayer),
