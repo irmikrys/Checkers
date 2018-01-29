@@ -12,7 +12,8 @@
 %% API
 -import(lists, [foldr/3, map/2, nth/2]).
 -export([computerMove/2, nextPlayer/1]).
--define(TREE_DEPTH, 1).
+
+-include("constants.hrl").
 
 computerMove(Board, Color) ->
   PossibleMoves = logic:getPossibleMoves(Board, Color),
