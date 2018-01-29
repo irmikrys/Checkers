@@ -69,13 +69,13 @@ turnToKing(Board, Position, Color) ->
 %% blacks diagonally up), kings same for now...
 
 %-- returns possible moves for figure from From position
-getPossibleMoves(Board,Color) ->
-  Filtered = maps:filter(fun(_,V) -> {ColorPiece,_} = V, ColorPiece == Color end,Board),
-  MoveMap = maps:fold(fun(From,Piece,Acc) ->
-              if Piece=={Color,disc} -> maps:put(From,getPossibleMoves(Board,From,{Color,disc}),Acc);
-                 Piece=={Color,king} ->  maps:put(From,getPossibleMoves(Board,From,{Color,king}),Acc)
-              end
-            end,maps:new(),Filtered),
+getPossibleMoves(Board, Color) ->
+  Filtered = maps:filter(fun(_, V) -> {ColorPiece, _} = V, ColorPiece == Color end, Board),
+  MoveMap = maps:fold(fun(From, Piece, Acc) ->
+    if Piece == {Color, disc} -> maps:put(From, getPossibleMoves(Board, From, {Color, disc}), Acc);
+      Piece == {Color, king} -> maps:put(From, getPossibleMoves(Board, From, {Color, king}), Acc)
+    end
+                      end, maps:new(), Filtered),
   MoveMap.
 
 getPossibleMoves(Board, From = {X, Y}, {white, disc}) ->

@@ -14,16 +14,16 @@
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
   CurrentPlayer = white,
-  play(initBoard(),CurrentPlayer).
+  play(initBoard(), CurrentPlayer).
 
-play(Board,CurrentPlayer) ->
+play(Board, CurrentPlayer) ->
   NewPlayer = nextPlayer(CurrentPlayer),
-  io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
+  io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
   io:fwrite(board:showBoard(Board)),
-  [From,To] = input:getInput(),
+  [From, To] = input:getInput(),
   try
-    NewBoard = logic:makeMove(Board,From,To),
-    play(NewBoard,NewPlayer)
+    NewBoard = logic:makeMove(Board, From, To),
+    play(NewBoard, NewPlayer)
   catch
     _:_ ->
       io:fwrite("You cannot make that move! Try again:~n"),
@@ -44,14 +44,14 @@ test() ->
   io:fwrite("~n============= Testing =============~n~n"),
   Board = initBoard(),
   %io:fwrite(Board),
-  playAI(Board,white).
-  %NewBoard = ai:computerMove(initBoard(),white),
-  %io:fwrite(board:showBoard(NewBoard)).
+  playAI(Board, white).
+%NewBoard = ai:computerMove(initBoard(),white),
+%io:fwrite(board:showBoard(NewBoard)).
 
-playAI(Board,CurrentPlayer) ->
+playAI(Board, CurrentPlayer) ->
   NewPlayer = nextPlayer(CurrentPlayer),
-  io:fwrite(lists:concat(["Player ",CurrentPlayer," move!~n"])),
+  io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
   io:fwrite(board:showBoard(Board)),
-  NewBoard = ai:computerMove(Board,CurrentPlayer),
-  {ok,[_]} = io:fread("Nextmove: ","~s"),
-  playAI(NewBoard,NewPlayer).
+  NewBoard = ai:computerMove(Board, CurrentPlayer),
+  {ok, [_]} = io:fread("Nextmove: ", "~s"),
+  playAI(NewBoard, NewPlayer).
