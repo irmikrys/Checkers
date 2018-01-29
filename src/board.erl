@@ -45,7 +45,7 @@ showField(FieldType) ->
             FieldType == ?BLACK_DISC -> "b";%%[9787];
             FieldType == ?WHITE_KING -> "W";%%[9812];
             FieldType == ?BLACK_KING -> "B";%%[9818];
-            FieldType == ?WHITE_FIELD -> "-";%%[9633];
+            FieldType == ?WHITE_FIELD -> ".";%%[9633];
             FieldType == ?BLACK_FIELD -> "-";%%[9632];
             true -> "*"
           end,

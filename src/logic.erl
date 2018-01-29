@@ -29,7 +29,7 @@ makeMove(Board, From, To) ->
       IsJumpOver = checkIfRegularJump(Board, From, To, oppositeColor(Color)),
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Color, Figure}),
-      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver),
+      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, IsJumpOver),
       turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
   end.
@@ -40,26 +40,15 @@ addToBoard(Board, Pos, Draught) ->
 deleteFromBoard(Board, Pos) ->
   maps:remove(Pos, Board).
 
-jumpIfOver(Board, From, To, Color, IsOver) ->
+jumpIfOver(Board, {Xfrom, Yfrom}, {Xto, Yto}, IsOver) ->
   if
     IsOver == true ->
-      io:fwrite("----------- Is a jump over another draught --------------"),
-      killEnemyIfNecessary(Board, From, To, Color);
-    true -> Board
-  end.
-
-%-- returns same board if no enemy between positions
-%-- returns board without mid draught if enemy
-killEnemyIfNecessary(Board, {Xfrom, Yfrom}, {Xto, Yto}, CurrentColor) ->
-  EnemyPosition = {round((Xfrom + Xto) / 2), round((Yfrom + Yto) / 2)},
-  IsEnemy = checkIfEnemy(Board, EnemyPosition, CurrentColor),
-  if
-    IsEnemy == true ->
-      io:fwrite("----------- ENEMY KILL !!! --------------"),
+      Xenemy = round((Xfrom + Xto) / 2),
+      Yenemy = round((Yfrom + Yto) / 2),
+      EnemyPosition = {Xenemy, Yenemy},
+      io:fwrite("{~w, ~w}", [Xenemy, Yenemy]),
       deleteFromBoard(Board, EnemyPosition);
-    true ->
-      io:fwrite("----------- Not enemy, sorry... --------------"),
-      Board
+    true -> Board
   end.
 
 turnToKing(Board, Position, Color) ->
