@@ -23,7 +23,11 @@ play(Board, CurrentPlayer) ->
   [From, To] = input:getInput(),
   try
     NewBoard = logic:makeMove(Board, From, To),
-    play(NewBoard, NewPlayer)
+      IsWinner = hasWon(NewBoard,CurrentPlayer),
+      if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
+        io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
+        true -> play(NewBoard, NewPlayer)
+      end
   catch
     _:_ ->
       io:fwrite("You cannot make that move! Try again:~n"),
@@ -54,4 +58,12 @@ playAI(Board, CurrentPlayer) ->
   io:fwrite(board:showBoard(Board)),
   NewBoard = ai:computerMove(Board, CurrentPlayer),
   {ok, [_]} = io:fread("Nextmove: ", "~s"),
-  playAI(NewBoard, NewPlayer).
+  IsWinner = hasWon(NewBoard,CurrentPlayer),
+  if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
+    io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
+    true -> playAI(NewBoard, NewPlayer)
+  end.
+
+hasWon(Board,CurrentPlayer) ->
+  Values = maps:values(Board),
+  lists:all(fun(Value) -> {Val,_} = Value, Val == CurrentPlayer end,Values).
