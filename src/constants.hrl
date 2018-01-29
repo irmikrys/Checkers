@@ -18,4 +18,11 @@
 -define(NUMS, lists:seq(1, 8)).
 -define(CHARS, ["A", "B", "C", "D", "E", "F", "G", "H"]).
 
--define(TREE_DEPTH, 2).
+-define(TREE_DEPTH, 1).
+
+%-- directions
+-define(SW, {+1, -1}).
+-define(NW, {-1, -1}).
+-define(NE, {-1, +1}).
+-define(SE, {+1, +1}).
+
