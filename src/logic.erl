@@ -46,7 +46,7 @@ jumpIfOver(Board, {Xfrom, Yfrom}, {Xto, Yto}, IsOver) ->
       Xenemy = round((Xfrom + Xto) / 2),
       Yenemy = round((Yfrom + Yto) / 2),
       EnemyPosition = {Xenemy, Yenemy},
-      io:fwrite("{~w, ~w}", [Xenemy, Yenemy]),
+      %io:fwrite("{~w, ~w}", [Xenemy, Yenemy]),
       deleteFromBoard(Board, EnemyPosition);
     true -> Board
   end.
@@ -144,12 +144,6 @@ checkIfPosAvailable(Board, Position = {X, Y}) ->
 
 checkIfOccupied(Board, Position) ->
   maps:is_key(Position, Board).
-
-checkIfEnemy(Board, EnemyPosition, CurrentColor) ->
-  {Figure, Color} = getDraught(Board, EnemyPosition),
-  IsDisc = Figure == disc,
-  HasOppositeColor = Color /= CurrentColor,
-  IsDisc and HasOppositeColor.
 
 checkIfMoveFieldBlack(Position) ->
   Field = getFieldColor(Position),

@@ -14,7 +14,9 @@
 start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
   CurrentPlayer = white,
-  play(initBoard(), CurrentPlayer).
+  playWithAI(initBoard(), CurrentPlayer).
+  %AIvsAI(initBoard(), CurrentPlayer).
+  %play(initBoard(), CurrentPlayer).
 
 play(Board, CurrentPlayer) ->
   NewPlayer = nextPlayer(CurrentPlayer),
@@ -47,21 +49,46 @@ initBoard() ->
 test() ->
   io:fwrite("~n============= Testing =============~n~n"),
   Board = initBoard(),
-  %io:fwrite(Board),
-  playAI(Board, white).
-%NewBoard = ai:computerMove(initBoard(),white),
-%io:fwrite(board:showBoard(NewBoard)).
+  playAIvsAI(Board, white).
 
-playAI(Board, CurrentPlayer) ->
+playAIvsAI(Board, CurrentPlayer) ->
   NewPlayer = nextPlayer(CurrentPlayer),
   io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
   io:fwrite(board:showBoard(Board)),
   NewBoard = ai:computerMove(Board, CurrentPlayer),
-  {ok, [_]} = io:fread("Nextmove: ", "~s"),
   IsWinner = hasWon(NewBoard,CurrentPlayer),
   if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
     io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
-    true -> playAI(NewBoard, NewPlayer)
+    true -> playAIvsAI(NewBoard, NewPlayer)
+  end.
+
+playWithAI(Board, CurrentPlayer) ->
+  NewPlayer = nextPlayer(CurrentPlayer),
+  io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
+  io:fwrite(board:showBoard(Board)),
+  NewBoard = ai:computerMove(Board, CurrentPlayer),
+  IsWinner = hasWon(NewBoard,CurrentPlayer),
+  if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
+    io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
+    true -> playHuman(NewBoard, NewPlayer)
+  end.
+
+playHuman(Board, CurrentPlayer) ->
+  NewPlayer = nextPlayer(CurrentPlayer),
+  io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
+  io:fwrite(board:showBoard(Board)),
+  [From, To] = input:getInput(),
+  try
+    NewBoard = logic:makeMove(Board, From, To),
+    IsWinner = hasWon(NewBoard,CurrentPlayer),
+    if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
+      io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
+      true -> playWithAI(NewBoard, NewPlayer)
+    end
+  catch
+    _:_ ->
+      io:fwrite("You cannot make that move! Try again:~n"),
+      playHuman(Board, CurrentPlayer)
   end.
 
 hasWon(Board,CurrentPlayer) ->
