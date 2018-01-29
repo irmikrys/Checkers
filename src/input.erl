@@ -11,7 +11,7 @@
 -author("irmi").
 
 %% API
--export([getInput/0, parseColumn/1, parseRow/1, mapCharsToNums/0]).
+-export([getInput/0]).
 
 -include("constants.hrl").
 
@@ -19,9 +19,15 @@
 
 getInput() ->
   io:fwrite("Enter positions properly formatted e.g. A1:~n"),
-  From = getFromPosition(),
-  To = getToPosition(),
-  [From, To].
+  try
+    From = getFromPosition(),
+    To = getToPosition(),
+    [From, To]
+  catch
+    _:_ ->
+      io:fwrite("Wrong input! Try again:~n"),
+      getInput()
+  end.
 
 getFromPosition() ->
   {ok, [From]} = io:fread("From: ", "~s"),
