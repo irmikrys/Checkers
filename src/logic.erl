@@ -114,12 +114,25 @@ getSteps(Board, {X, Y}, {black, disc}) ->
     X1 <- [X - 1], Y1 <- [Y - 1, Y + 1],
     checkIfPosAvailable(Board, {X1, Y1})];
 
-getSteps(Board, {X, Y}, {_, king}) ->
-  [{X1, Y1} ||
-    X1 <- [X - 1, X + 1], Y1 <- [Y - 1, Y + 1],
-    checkIfPosAvailable(Board, {X1, Y1})].
+%-- get all steps until new position not available
+getSteps(Board, Position, {_, king}) ->
+  lists:flatten([addKingSteps(Board, Position, Dir) || Dir <- [?NE, ?NW, ?SE, ?SW]]).
+
+addKingSteps(Board, Position, Direction) ->
+  Available = checkInDirection(Board, Position, Direction),
+  if
+    Available == true ->
+      AvailablePosition = getPosInDirection(Position, Direction),
+      [AvailablePosition] ++ addKingSteps(Board, AvailablePosition, Direction);
+    true -> []
+  end.
 
 %------------------------------ checkers -----------------------------
+
+%-- checks if position in specified direction is available
+checkInDirection(Board, Position, Direction) ->
+  PosInDirection = getPosInDirection(Position, Direction),
+  checkIfPosAvailable(Board, PosInDirection).
 
 checkIfPosAvailable(Board, Position = {X, Y}) ->
   Occupied = checkIfOccupied(Board, Position),
@@ -154,6 +167,11 @@ checkIfTurnsToKing({X, _Y}, white) -> X == 8;
 checkIfTurnsToKing({X, _Y}, black) -> X == 1.
 
 %------------------------------ getters ------------------------------
+
+getPosInDirection({X,Y}, {Xdir, Ydir}) ->
+  XInDirection = X + Xdir,
+  YInDirection = Y + Ydir,
+  {XInDirection, YInDirection}.
 
 getFieldType(Board, Position) ->
   maps:get(Position, Board, {getFieldColor(Position), field}).
