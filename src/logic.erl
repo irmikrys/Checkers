@@ -26,9 +26,9 @@ makeMove(Board, From, To) ->
   if
     (IsToAvailable == true) and (IsBlack == true) ->
       {Color, Figure} = getDraught(Board, From),
-      IsJumpOver = checkIfRegularJump(Board, From, To, oppositeColor(Color)),
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Color, Figure}),
+      IsJumpOver = checkIfRegularJump(Board, From, To, oppositeColor(Color)),
       BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, IsJumpOver),
       turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
@@ -73,11 +73,12 @@ getPossibleMoves(Board, Color) ->
   MoveMap.
 
 %% discs can move one field forward (whites diagonally down,
-%% blacks diagonally up), kings same for now...
+%% blacks diagonally up), kings as many fields as possible
 %% if there is a kill (jump) possible, then steps not generated
 %-- returns possible moves for FigureType from From position
 getPossibleMoves(Board, From, FigureType) ->
   Jumps = getJumps(Board, From, FigureType),
+%%  erlang:display(Jumps),
   NoKills = (Jumps == []),
   if
     NoKills == false ->
@@ -92,11 +93,43 @@ getJumps(Board, {X, Y}, {Color, disc}) ->
     checkIfPosAvailable(Board, {X2, Y2}),
     checkIfRegularJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))];
 
-getJumps(Board, {X, Y}, {Color, king}) ->
-  [{X2, Y2} ||
-    X2 <- [X - 2, X + 2], Y2 <- [Y - 2, Y + 2],
-    checkIfPosAvailable(Board, {X2, Y2}),
-    checkIfRegularJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))].
+getJumps(Board, Position, {Color, king}) ->
+  lists:flatten([
+    skipFieldsBeforeJump(Board, Position, Dir, Color) || Dir <- [?NE, ?NW, ?SE, ?SW]
+  ]).
+
+%-- skip all fields before potential enemy to kill
+%-- if the Position not available then (maybe) get a king jump
+skipFieldsBeforeJump(Board, Position, Direction, KingColor) ->
+  Available = checkInDirection(Board, Position, Direction),
+  MaybeAvailablePos = getPosInDirection(Position, Direction),
+  if
+    Available == true ->
+      skipFieldsBeforeJump(Board, MaybeAvailablePos, Direction, KingColor);
+    true ->
+      getKingJump(Board, MaybeAvailablePos, Direction, KingColor)
+  end.
+
+%-- check if anything stands in the Position,
+%-- if there is an enemy then check if field behind available
+%-- if available then add to jumps
+%-- if more behind available then add also (like steps)
+getKingJump(Board, EnemyPosition, Direction, KingColor) ->
+  Occupied = checkIfOccupied(Board, EnemyPosition),
+  if
+    Occupied == true ->
+      {DraughtColor, _} = getDraught(Board, EnemyPosition),
+%%      erlang:display(DraughtColor),
+      IsEnemy = checkIfEnemy(KingColor, DraughtColor),
+%%      erlang:display(IsEnemy),
+      if
+        IsEnemy == true ->
+          getKingSteps(Board, EnemyPosition, Direction);
+        true ->
+          []
+      end;
+    true -> []
+  end.
 
 getSteps(Board, {X, Y}, {white, disc}) ->
   [{X1, Y1} ||
@@ -110,14 +143,16 @@ getSteps(Board, {X, Y}, {black, disc}) ->
 
 %-- get all steps until new position not available
 getSteps(Board, Position, {_, king}) ->
-  lists:flatten([addKingSteps(Board, Position, Dir) || Dir <- [?NE, ?NW, ?SE, ?SW]]).
+  lists:flatten([
+    getKingSteps(Board, Position, Dir) || Dir <- [?NE, ?NW, ?SE, ?SW]
+  ]).
 
-addKingSteps(Board, Position, Direction) ->
+getKingSteps(Board, Position, Direction) ->
   Available = checkInDirection(Board, Position, Direction),
   if
     Available == true ->
       AvailablePosition = getPosInDirection(Position, Direction),
-      [AvailablePosition] ++ addKingSteps(Board, AvailablePosition, Direction);
+      [AvailablePosition] ++ getKingSteps(Board, AvailablePosition, Direction);
     true -> []
   end.
 
@@ -127,6 +162,10 @@ addKingSteps(Board, Position, Direction) ->
 checkInDirection(Board, Position, Direction) ->
   PosInDirection = getPosInDirection(Position, Direction),
   checkIfPosAvailable(Board, PosInDirection).
+
+checkIfEnemy(CurrentColor, EnemyColor) ->
+  Color = oppositeColor(CurrentColor),
+  (Color == EnemyColor).
 
 checkIfPosAvailable(Board, Position = {X, Y}) ->
   Occupied = checkIfOccupied(Board, Position),
@@ -138,12 +177,6 @@ checkIfPosAvailable(Board, Position = {X, Y}) ->
 
 checkIfOccupied(Board, Position) ->
   maps:is_key(Position, Board).
-
-checkIfEnemy(Board, EnemyPosition, CurrentColor) ->
-  {Figure, Color} = getDraught(Board, EnemyPosition),
-  IsDisc = Figure == disc,
-  HasOppositeColor = Color /= CurrentColor,
-  IsDisc and HasOppositeColor.
 
 checkIfMoveFieldBlack(Position) ->
   Field = getFieldColor(Position),
@@ -162,7 +195,7 @@ checkIfTurnsToKing({X, _Y}, black) -> X == 1.
 
 %------------------------------ getters ------------------------------
 
-getPosInDirection({X,Y}, {Xdir, Ydir}) ->
+getPosInDirection({X, Y}, {Xdir, Ydir}) ->
   XInDirection = X + Xdir,
   YInDirection = Y + Ydir,
   {XInDirection, YInDirection}.
