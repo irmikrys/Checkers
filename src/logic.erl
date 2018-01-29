@@ -63,30 +63,55 @@ turnToKing(Board, Position, Color) ->
 getPossibleMoves(Board, Color) ->
   Filtered = maps:filter(fun(_, V) -> {ColorPiece, _} = V, ColorPiece == Color end, Board),
   MoveMap = maps:fold(fun(From, Piece, Acc) ->
-    if Piece == {Color, disc} -> maps:put(From, getPossibleMoves(Board, From, {Color, disc}), Acc);
-      Piece == {Color, king} -> maps:put(From, getPossibleMoves(Board, From, {Color, king}), Acc)
+    if
+      Piece == {Color, disc} ->
+        maps:put(From, getPossibleMoves(Board, From, {Color, disc}), Acc);
+      Piece == {Color, king} ->
+        maps:put(From, getPossibleMoves(Board, From, {Color, king}), Acc)
     end
                       end, maps:new(), Filtered),
   MoveMap.
 
 %% discs can move one field forward (whites diagonally down,
 %% blacks diagonally up), kings same for now...
-%-- returns possible moves for figure from From position
-getPossibleMoves(Board, From = {X, Y}, {white, disc}) ->
-  [{X1, Y1} || X1 <- [X + 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, black)];
+%% if there is a kill (jump) possible, then steps not generated
+%-- returns possible moves for FigureType from From position
+getPossibleMoves(Board, From, FigureType) ->
+  Jumps = getJumps(Board, From, FigureType),
+  NoKills = (Jumps == []),
+  if
+    NoKills == false ->
+      Jumps;
+    NoKills == true ->
+      getSteps(Board, From, FigureType)
+  end.
 
-getPossibleMoves(Board, From = {X, Y}, {black, disc}) ->
-  [{X1, Y1} || X1 <- [X - 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, white)];
+getJumps(Board, {X, Y}, {Color, disc}) ->
+  [{X2, Y2} ||
+    X2 <- [X - 2, X + 2], Y2 <- [Y - 2, Y + 2],
+    checkIfPosAvailable(Board, {X2, Y2}),
+    checkIfRegularJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))];
 
-getPossibleMoves(Board, From = {X, Y}, {white, king}) ->
-  [{X1, Y1} || X1 <- [X + 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, black)];
+getJumps(Board, {X, Y}, {Color, king}) ->
+  [{X2, Y2} ||
+    X2 <- [X - 2, X + 2], Y2 <- [Y - 2, Y + 2],
+    checkIfPosAvailable(Board, {X2, Y2}),
+    checkIfRegularJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))].
 
-getPossibleMoves(Board, From = {X, Y}, {black, king}) ->
-  [{X1, Y1} || X1 <- [X - 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, white)].
+getSteps(Board, {X, Y}, {white, disc}) ->
+  [{X1, Y1} ||
+    X1 <- [X + 1], Y1 <- [Y - 1, Y + 1],
+    checkIfPosAvailable(Board, {X1, Y1})];
+
+getSteps(Board, {X, Y}, {black, disc}) ->
+  [{X1, Y1} ||
+    X1 <- [X - 1], Y1 <- [Y - 1, Y + 1],
+    checkIfPosAvailable(Board, {X1, Y1})];
+
+getSteps(Board, {X, Y}, {_, king}) ->
+  [{X1, Y1} ||
+    X1 <- [X - 1, X + 1], Y1 <- [Y - 1, Y + 1],
+    checkIfPosAvailable(Board, {X1, Y1})].
 
 %------------------------------ checkers -----------------------------
 
