@@ -23,12 +23,12 @@
 makeMove(Board, From, To) ->
   IsToAvailable = checkIfPosAvailable(Board, To),
   IsBlack = checkIfMoveFieldBlack(To),
-  IsJumpOver = checkIfRegularJump(Board, From, To),
   if
     (IsToAvailable == true) and (IsBlack == true) ->
-      {Figure, Color} = getDraught(Board, From),
+      {Color, Figure} = getDraught(Board, From),
+      IsJumpOver = checkIfRegularJump(Board, From, To, oppositeColor(Color)),
       BoardWithDeleted = deleteFromBoard(Board, From),
-      BoardWithAdded = addToBoard(BoardWithDeleted, To, {Figure, Color}),
+      BoardWithAdded = addToBoard(BoardWithDeleted, To, {Color, Figure}),
       BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Color, IsJumpOver),
       turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
@@ -42,7 +42,9 @@ deleteFromBoard(Board, Pos) ->
 
 jumpIfOver(Board, From, To, Color, IsOver) ->
   if
-    IsOver == true -> killEnemyIfNecessary(Board, From, To, Color);
+    IsOver == true ->
+      io:fwrite("----------- Is a jump over another draught --------------"),
+      killEnemyIfNecessary(Board, From, To, Color);
     true -> Board
   end.
 
@@ -52,8 +54,12 @@ killEnemyIfNecessary(Board, {Xfrom, Yfrom}, {Xto, Yto}, CurrentColor) ->
   EnemyPosition = {round((Xfrom + Xto) / 2), round((Yfrom + Yto) / 2)},
   IsEnemy = checkIfEnemy(Board, EnemyPosition, CurrentColor),
   if
-    IsEnemy == true -> deleteFromBoard(Board, EnemyPosition);
-    true -> Board
+    IsEnemy == true ->
+      io:fwrite("----------- ENEMY KILL !!! --------------"),
+      deleteFromBoard(Board, EnemyPosition);
+    true ->
+      io:fwrite("----------- Not enemy, sorry... --------------"),
+      Board
   end.
 
 turnToKing(Board, Position, Color) ->
@@ -65,10 +71,6 @@ turnToKing(Board, Position, Color) ->
 
 %------------------------------- moves -------------------------------
 
-%% discs can move one field forward (whites diagonally down,
-%% blacks diagonally up), kings same for now...
-
-%-- returns possible moves for figure from From position
 getPossibleMoves(Board, Color) ->
   Filtered = maps:filter(fun(_, V) -> {ColorPiece, _} = V, ColorPiece == Color end, Board),
   MoveMap = maps:fold(fun(From, Piece, Acc) ->
@@ -78,21 +80,24 @@ getPossibleMoves(Board, Color) ->
                       end, maps:new(), Filtered),
   MoveMap.
 
+%% discs can move one field forward (whites diagonally down,
+%% blacks diagonally up), kings same for now...
+%-- returns possible moves for figure from From position
 getPossibleMoves(Board, From = {X, Y}, {white, disc}) ->
   [{X1, Y1} || X1 <- [X + 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2})];
+  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, black)];
 
 getPossibleMoves(Board, From = {X, Y}, {black, disc}) ->
   [{X1, Y1} || X1 <- [X - 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2})];
+  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, white)];
 
 getPossibleMoves(Board, From = {X, Y}, {white, king}) ->
   [{X1, Y1} || X1 <- [X + 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2})];
+  [{X2, Y2} || X2 <- [X + 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, black)];
 
 getPossibleMoves(Board, From = {X, Y}, {black, king}) ->
   [{X1, Y1} || X1 <- [X - 1], Y1 <- [Y - 1, Y + 1], checkIfPosAvailable(Board, {X1, Y1})] ++
-  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2})].
+  [{X2, Y2} || X2 <- [X - 2], Y2 <- [Y - 2, Y + 2], checkIfPosAvailable(Board, {X2, Y2}), checkIfRegularJump(Board, From, {X2, Y2}, white)].
 
 %------------------------------ checkers -----------------------------
 
@@ -117,14 +122,16 @@ checkIfMoveFieldBlack(Position) ->
   Field = getFieldColor(Position),
   Field == black.
 
-%-- returns true if there is sth between discs positions
-checkIfRegularJump(Board, {Xfrom, Yfrom}, {Xto, Yto}) ->
-  BetweenNotEmpty = checkIfOccupied(Board, {round((Xfrom + Xto) / 2), round((Yfrom + Yto) / 2)}),
-  BetweenNotEmpty and ((Xfrom + Xto) rem 2 == 0) and ((Yfrom + Yto) rem 2 == 0).
+%-- returns true if there is enemy between positions
+checkIfRegularJump(Board, {Xfrom, Yfrom}, {Xto, Yto}, EnemyColor) ->
+  Xbetween = round((Xfrom + Xto) / 2),
+  Ybetween = round((Yfrom + Yto) / 2),
+  BetweenNotEmpty = checkIfOccupied(Board, {Xbetween, Ybetween}),
+  {Color, _} = getFieldType(Board, {Xbetween, Ybetween}),
+  (Color == EnemyColor) and BetweenNotEmpty and ((Xfrom + Xto) rem 2 == 0) and ((Yfrom + Yto) rem 2 == 0).
 
-checkIfTurnsToKing({X, _Y}, Color) ->
-  ((X == 1) and (Color == black)) or
-    ((X == 8) and (Color == white)).
+checkIfTurnsToKing({X, _Y}, white) -> X == 8;
+checkIfTurnsToKing({X, _Y}, black) -> X == 1.
 
 %------------------------------ getters ------------------------------
 
@@ -137,3 +144,8 @@ getFieldColor(_) -> throw(exception_get_field_color).
 
 getDraught(Board, Position) ->
   maps:get(Position, Board).
+
+%------------------------------ helpful ------------------------------
+
+oppositeColor(white) -> black;
+oppositeColor(black) -> white.
