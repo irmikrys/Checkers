@@ -25,31 +25,30 @@ computerMove(Board, Color) ->
   end.
 
 concurrentTreeGeneration(Board, Color, Depth) ->
-  register(threadpool, spawn(fun() -> threadPool(erlang:system_info(schedulers_online) - 1) end)),
   Pid = self(),
   spawn(fun() -> concurrentTreeGeneration(Board, Color, Depth, Pid) end),
   Result = receive X -> X end,
-  threadpool ! finish,
   Result.
 
 concurrentTreeGeneration(Board, Color, Depth, Parent) ->
+  NewColor = nextPlayer(Color),
   Pid = self(),
-  ChildFunc = fun(PossibleMove) -> UseNewThread = if Depth > 1 -> anyThreadAvailable();
-                                                    true -> reject
-                                                  end,
+  ChildFunc = fun(Move) -> UseNewThread = if
+                                            Depth > 1 -> ok;
+                                            true -> reject
+                                          end,
     case UseNewThread of
       reject ->
-        {sync, PossibleMove};
+        {sync, Move};
       ok ->
-        From = nth(1, PossibleMove),
-        To = nth(2, PossibleMove),
+        From = nth(1, Move),
+        To = nth(2, Move),
         NewBoard = logic:makeMove(Board, From, To),
-        spawn(fun() -> concurrentTreeGeneration(NewBoard, Color, Depth - 1, Pid) end),
+        spawn(fun() -> concurrentTreeGeneration(NewBoard, NewColor, Depth - 1, Pid) end),
         async
-    end
-              end,
+    end end,
   PossibleMoves = logic:getPossibleMoves(Board, Color),
-  AllPossibleMoves = maps:fold(fun(K, V, AccIn) ->
+  Moves = maps:fold(fun(K, V, AccIn) ->
     if V /= [] ->
       AccIn ++ lists:foldl(fun(Element, Acc) ->
         Acc ++ [[K, Element]]
@@ -57,19 +56,18 @@ concurrentTreeGeneration(Board, Color, Depth, Parent) ->
         [], V);
       true -> AccIn
     end
-                               end, [], PossibleMoves),
-  Children = map(ChildFunc, AllPossibleMoves),
+                    end, [], PossibleMoves),
+  Children = map(ChildFunc, Moves),
   ChildrenRes = map(fun(Result) -> case Result of
-                                     {sync, PossibleMove} ->
-                                       From = nth(1, PossibleMove),
-                                       To = nth(2, PossibleMove),
+                                     {sync, Move} ->
+                                       From = nth(1, Move),
+                                       To = nth(2, Move),
                                        NewBoard = logic:makeMove(Board, From, To),
-                                       generateTree(NewBoard, Color, Depth - 1);
+                                       generateTree(NewBoard, NewColor, Depth - 1);
                                      async ->
                                        receive X -> X end
                                    end end,
     Children),
-  threadpool ! freeThread,
   Parent ! {Board, Color, rateBoard(Board, Color), ChildrenRes}.
 
 generateTree(Board, Color, 0) ->
@@ -134,19 +132,3 @@ rateBoard(Board, Color) ->
 
 nextPlayer(white) -> black;
 nextPlayer(black) -> white.
-
-threadPool(AvailableCores) ->
-  receive
-    finish -> ok;
-    freeThread -> threadPool(AvailableCores + 1);
-    {canGetNew, Sender} ->
-      if
-        AvailableCores > 0 -> Sender ! ok,
-          threadPool(AvailableCores - 1);
-        true -> Sender ! reject,
-          threadPool(0)
-      end
-  end.
-
-anyThreadAvailable() -> threadpool ! {canGetNew, self()},
-  receive X -> X end.
