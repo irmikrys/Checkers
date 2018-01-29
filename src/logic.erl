@@ -30,7 +30,6 @@ makeMove(Board, From, To) ->
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Color, Figure}),
       IsJumpOver = checkIfJump(Board, From, To, oppositeColor(Color)),
-      erlang:display(IsJumpOver),
       BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Direction, IsJumpOver),
       turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
@@ -85,7 +84,6 @@ getPossibleMoves(Board, Color) ->
 %% {Moves,HasJumps}
 getPossibleMoves(Board, From, FigureType) ->
   Jumps = getJumps(Board, From, FigureType),
-%%  erlang:display(Jumps),
   NoKills = (Jumps == []),
   if
     NoKills == false ->
@@ -126,9 +124,7 @@ getKingJump(Board, EnemyPosition, Direction, KingColor) ->
   if
     Occupied == true ->
       {DraughtColor, _} = getDraught(Board, EnemyPosition),
-%%      erlang:display(DraughtColor),
       IsEnemy = checkIfEnemy(KingColor, DraughtColor),
-%%      erlang:display(IsEnemy),
       if
         IsEnemy == true ->
           getKingSteps(Board, EnemyPosition, Direction);
@@ -192,11 +188,9 @@ checkIfMoveFieldBlack(Position) ->
 %-- returns true if there is enemy between positions
 checkIfJump(Board, From = {Xfrom, Yfrom}, To = {Xto, Yto}, EnemyColor) ->
   Direction = getDirection(From, To),
-  erlang:display(Direction), %ok
   Xdist = erlang:abs(Xto - Xfrom),
   Ydist = erlang:abs(Yto - Yfrom),
   PossibleJump = checkIfJumpPossible(Xdist, Ydist),
-  erlang:display(PossibleJump), %ok
   if
     PossibleJump == true ->
       checkFieldsBetween(Board, From, To, Direction, EnemyColor);
@@ -209,11 +203,9 @@ checkIfJumpPossible(Xdist, Ydist) ->
 %-- check if between positions there is exactly one enemy
 checkFieldsBetween(Board, From, To, Direction, EnemyColor) ->
   Fields = getFieldsBetween(Board, From, To, Direction),
-  erlang:display(Fields),
-  Discs = lists:filter(fun({_, {_,Type}}) -> Type /= field end, Fields),
-  erlang:display(Discs),
+  Discs = lists:filter(fun({_, {_, Type}}) -> Type == disc end, Fields),
   DiscsNum = length(Discs),
-  EnemiesNum = length(lists:filter(fun({_,{Col, _}}) -> Col == EnemyColor end, Discs)),
+  EnemiesNum = length(lists:filter(fun({_, {Col, _}}) -> Col == EnemyColor end, Discs)),
   if
     (DiscsNum == 1) and (EnemiesNum == 1) -> true;
     true -> false
@@ -241,8 +233,7 @@ getFieldsBetween(Board, From, To, Direction) ->
 
 getEnemyPosition(Board, From, To, Direction) ->
   Fields = getFieldsBetween(Board, From, To, Direction),
-  [{EnemyPosition, _}] = lists:filter(fun({_, {_, Type}}) -> Type /= field end, Fields),
-  erlang:display(EnemyPosition),
+  [{EnemyPosition, _}] = lists:filter(fun({_, {_, Type}}) -> Type == disc end, Fields),
   EnemyPosition.
 
 getPosInDirection({X, Y}, {Xdir, Ydir}) ->
