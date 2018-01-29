@@ -15,8 +15,6 @@ start() ->
   io:fwrite("~n============= Draughts =============~n~n"),
   CurrentPlayer = white,
   playWithAI(initBoard(), CurrentPlayer).
-  %AIvsAI(initBoard(), CurrentPlayer).
-  %play(initBoard(), CurrentPlayer).
 
 playWithHuman() ->
   io:fwrite("~n============= Draughts =============~n~n"),
@@ -39,11 +37,11 @@ play(Board, CurrentPlayer) ->
   [From, To] = input:getInput(),
   try
     NewBoard = logic:makeMove(Board, From, To),
-      IsWinner = hasWon(NewBoard,CurrentPlayer),
-      if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
-        io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
-        true -> play(NewBoard, NewPlayer)
-      end
+    IsWinner = hasWon(NewBoard, CurrentPlayer),
+    if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
+      io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
+      true -> play(NewBoard, NewPlayer)
+    end
   catch
     _:_ ->
       io:fwrite("You cannot make that move! Try again:~n"),
@@ -70,7 +68,7 @@ playAIvsAI(Board, CurrentPlayer) ->
   io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
   io:fwrite(board:showBoard(Board)),
   NewBoard = ai:computerMove(Board, CurrentPlayer),
-  IsWinner = hasWon(NewBoard,CurrentPlayer),
+  IsWinner = hasWon(NewBoard, CurrentPlayer),
   if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
     io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
     true -> playAIvsAI(NewBoard, NewPlayer)
@@ -81,7 +79,7 @@ playWithAI(Board, CurrentPlayer) ->
   io:fwrite(lists:concat(["Player ", CurrentPlayer, " move!~n"])),
   io:fwrite(board:showBoard(Board)),
   NewBoard = ai:computerMove(Board, CurrentPlayer),
-  IsWinner = hasWon(NewBoard,CurrentPlayer),
+  IsWinner = hasWon(NewBoard, CurrentPlayer),
   if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
     io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
     true -> playHuman(NewBoard, NewPlayer)
@@ -94,7 +92,7 @@ playHuman(Board, CurrentPlayer) ->
   [From, To] = input:getInput(),
   try
     NewBoard = logic:makeMove(Board, From, To),
-    IsWinner = hasWon(NewBoard,CurrentPlayer),
+    IsWinner = hasWon(NewBoard, CurrentPlayer),
     if IsWinner == true -> io:fwrite(board:showBoard(NewBoard)),
       io:fwrite(lists:concat(["Player ", CurrentPlayer, " has won!~n"]));
       true -> playWithAI(NewBoard, NewPlayer)
@@ -105,6 +103,6 @@ playHuman(Board, CurrentPlayer) ->
       playHuman(Board, CurrentPlayer)
   end.
 
-hasWon(Board,CurrentPlayer) ->
+hasWon(Board, CurrentPlayer) ->
   Values = maps:values(Board),
-  lists:all(fun(Value) -> {Val,_} = Value, Val == CurrentPlayer end,Values).
+  lists:all(fun(Value) -> {Val, _} = Value, Val == CurrentPlayer end, Values).

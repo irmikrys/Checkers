@@ -21,8 +21,8 @@
 -define(TREE_DEPTH, 5).
 
 %-- directions
--define(SW, {+1, -1}).
+-define(SW, {+ 1, -1}).
 -define(NW, {-1, -1}).
--define(NE, {-1, +1}).
--define(SE, {+1, +1}).
+-define(NE, {-1, + 1}).
+-define(SE, {+ 1, + 1}).
 
