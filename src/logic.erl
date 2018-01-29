@@ -25,11 +25,13 @@ makeMove(Board, From, To) ->
   IsBlack = checkIfMoveFieldBlack(To),
   if
     (IsToAvailable == true) and (IsBlack == true) ->
+      Direction = getDirection(From, To),
       {Color, Figure} = getDraught(Board, From),
       BoardWithDeleted = deleteFromBoard(Board, From),
       BoardWithAdded = addToBoard(BoardWithDeleted, To, {Color, Figure}),
-      IsJumpOver = checkIfRegularJump(Board, From, To, oppositeColor(Color)),
-      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, IsJumpOver),
+      IsJumpOver = checkIfJump(Board, From, To, oppositeColor(Color)),
+      erlang:display(IsJumpOver),
+      BoardJumpOver = jumpIfOver(BoardWithAdded, From, To, Direction, IsJumpOver),
       turnToKing(BoardJumpOver, To, Color);
     true -> throw(cannot_make_move_occupied)
   end.
@@ -40,13 +42,10 @@ addToBoard(Board, Pos, Draught) ->
 deleteFromBoard(Board, Pos) ->
   maps:remove(Pos, Board).
 
-jumpIfOver(Board, {Xfrom, Yfrom}, {Xto, Yto}, IsOver) ->
+jumpIfOver(Board, From, To, Direction, IsOver) ->
   if
     IsOver == true ->
-      Xenemy = round((Xfrom + Xto) / 2),
-      Yenemy = round((Yfrom + Yto) / 2),
-      EnemyPosition = {Xenemy, Yenemy},
-      io:fwrite("{~w, ~w}", [Xenemy, Yenemy]),
+      EnemyPosition = getEnemyPosition(Board, From, To, Direction),
       deleteFromBoard(Board, EnemyPosition);
     true -> Board
   end.
@@ -62,20 +61,22 @@ turnToKing(Board, Position, Color) ->
 
 getPossibleMoves(Board, Color) ->
   Filtered = maps:filter(fun(_, V) -> {ColorPiece, _} = V, ColorPiece == Color end, Board),
-  JumpMap = maps:fold(fun(From, Piece, Acc) ->
-    {Moves,HasJump} = getPossibleMoves(Board, From, Piece),
-                          if HasJump==true ->
-                              maps:put(From,Moves , Acc);
-                              true -> Acc
-                          end
-                      end, maps:new(), Filtered),
+  JumpMap = maps:fold(
+    fun(From, Piece, Acc) ->
+      {Moves, HasJump} = getPossibleMoves(Board, From, Piece),
+      if HasJump == true ->
+        maps:put(From, Moves, Acc);
+        true -> Acc
+      end
+    end, maps:new(), Filtered),
   Size = maps:size(JumpMap),
-  if Size==0 -> maps:fold(fun(From, Piece, Acc) ->
-                          {Moves,_} = getPossibleMoves(Board, From, Piece),
-                          maps:put(From,Moves, Acc)
-                      end, maps:new(), Filtered);
+  if Size == 0 -> maps:fold(
+    fun(From, Piece, Acc) ->
+      {Moves, _} = getPossibleMoves(Board, From, Piece),
+      maps:put(From, Moves, Acc)
+    end, maps:new(), Filtered);
     true -> JumpMap
-end.
+  end.
 
 %% discs can move one field forward (whites diagonally down,
 %% blacks diagonally up), kings as many fields as possible
@@ -88,16 +89,16 @@ getPossibleMoves(Board, From, FigureType) ->
   NoKills = (Jumps == []),
   if
     NoKills == false ->
-      {Jumps,true};
+      {Jumps, true};
     NoKills == true ->
-      {getSteps(Board, From, FigureType),false}
+      {getSteps(Board, From, FigureType), false}
   end.
 
 getJumps(Board, {X, Y}, {Color, disc}) ->
   [{X2, Y2} ||
     X2 <- [X - 2, X + 2], Y2 <- [Y - 2, Y + 2],
     checkIfPosAvailable(Board, {X2, Y2}),
-    checkIfRegularJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))];
+    checkIfJump(Board, {X, Y}, {X2, Y2}, oppositeColor(Color))];
 
 getJumps(Board, Position, {Color, king}) ->
   lists:flatten([
@@ -189,17 +190,60 @@ checkIfMoveFieldBlack(Position) ->
   Field == black.
 
 %-- returns true if there is enemy between positions
-checkIfRegularJump(Board, {Xfrom, Yfrom}, {Xto, Yto}, EnemyColor) ->
-  Xbetween = round((Xfrom + Xto) / 2),
-  Ybetween = round((Yfrom + Yto) / 2),
-  BetweenNotEmpty = checkIfOccupied(Board, {Xbetween, Ybetween}),
-  {Color, _} = getFieldType(Board, {Xbetween, Ybetween}),
-  (Color == EnemyColor) and BetweenNotEmpty and ((Xfrom + Xto) rem 2 == 0) and ((Yfrom + Yto) rem 2 == 0).
+checkIfJump(Board, From = {Xfrom, Yfrom}, To = {Xto, Yto}, EnemyColor) ->
+  Direction = getDirection(From, To),
+  erlang:display(Direction), %ok
+  Xdist = erlang:abs(Xto - Xfrom),
+  Ydist = erlang:abs(Yto - Yfrom),
+  PossibleJump = checkIfJumpPossible(Xdist, Ydist),
+  erlang:display(PossibleJump), %ok
+  if
+    PossibleJump == true ->
+      checkFieldsBetween(Board, From, To, Direction, EnemyColor);
+    true -> false
+  end.
+
+checkIfJumpPossible(Xdist, Ydist) ->
+  (Xdist > 1) and (Ydist > 1).
+
+%-- check if between positions there is exactly one enemy
+checkFieldsBetween(Board, From, To, Direction, EnemyColor) ->
+  Fields = getFieldsBetween(Board, From, To, Direction),
+  erlang:display(Fields),
+  Discs = lists:filter(fun({_, {_,Type}}) -> Type == disc end, Fields),
+  erlang:display(Discs),
+  DiscsNum = length(Discs),
+  EnemiesNum = length(lists:filter(fun({_,{Col, _}}) -> Col == EnemyColor end, Discs)),
+  if
+    (DiscsNum == 1) and (EnemiesNum == 1) -> true;
+    true -> false
+  end.
 
 checkIfTurnsToKing({X, _Y}, white) -> X == 8;
 checkIfTurnsToKing({X, _Y}, black) -> X == 1.
 
 %------------------------------ getters ------------------------------
+
+getDirection({Xfrom, Yfrom}, {Xto, Yto}) ->
+  Xdir = round((Xto - Xfrom) / erlang:abs(Xto - Xfrom)),
+  Ydir = round((Yto - Yfrom) / erlang:abs(Yto - Yfrom)),
+  {Xdir, Ydir}.
+
+getFieldsBetween(Board, From, To, Direction) ->
+  Pos = getPosInDirection(From, Direction),
+  if
+    Pos == To ->
+      [];
+    true ->
+      FieldType = getFieldType(Board, Pos),
+      [{Pos, FieldType}] ++ getFieldsBetween(Board, Pos, To, Direction)
+  end.
+
+getEnemyPosition(Board, From, To, Direction) ->
+  Fields = getFieldsBetween(Board, From, To, Direction),
+  [{EnemyPosition, _}] = lists:filter(fun({_, {_, Type}}) -> Type == disc end, Fields),
+  erlang:display(EnemyPosition),
+  EnemyPosition.
 
 getPosInDirection({X, Y}, {Xdir, Ydir}) ->
   XInDirection = X + Xdir,
